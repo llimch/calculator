@@ -51,10 +51,12 @@
 
     #note-select {
       background: #252525;
-      color: #4FC3F7;
+      color: red;
       font-weight: 600;
       font-size: 1rem;
       border: 1px solid #333;
+      width: 200px;
+      max-width: 100%;
     }
     
     .result-line {
@@ -287,32 +289,17 @@
 
   <!-- Main Content -->
   <div class="flex flex-1 overflow-hidden main-content">
-    <!-- Sidebar -->
-    <div id="sidebar" class="w-48 flex-shrink-0 flex flex-col border-r border-[#333] bg-[#1a1a1a]">
-      <!-- Mobile collapsible header for note titles -->
-      <div class="md:hidden px-3 py-1 flex items-center justify-between text-xs text-[#888] border-t border-[#333] cursor-pointer" onclick="toggleMobileNotes()">
-        <span></span>
-        <span id="mobile-notes-arrow">▼</span>
-      </div>
-      
-      <div class="flex-1 overflow-y-auto px-1 pb-4" id="sidebar-list">
-        <!-- Notes populated by JS -->
-      </div>
-    </div>
-
-    <!-- Editor Area -->
+    <!-- Editor Area (full width, pulldown select for notes) -->
     <div class="flex-1 flex flex-col overflow-hidden" id="editor-area">
       <!-- Note title bar -->
       <div class="flex items-center px-4 py-2 bg-[#252525] border-b border-[#333] flex-shrink-0">
         <div class="flex-1">
-          <select id="note-select" onchange="handleNoteSelect(this.value)" 
-                  class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-3 py-1 text-sm mb-1 focus:outline-none focus:border-[#FFD700]">
-          </select>
-          <input id="note-title" type="text" 
-                 class="w-full bg-transparent text-lg font-semibold outline-none"
-                 style="color: #4FC3F7;"
-                 placeholder="Note title" oninput="onTitleChange()">
-          <div id="last-updated" class="text-[10px] mt-0.5" style="color: #4CAF50;"></div>
+          <div style="display: flex; align-items: center;">
+            <select id="note-select" onchange="handleNoteSelect(this.value)" 
+                    class="bg-[#1e1e1e] border border-[#333] rounded-xl px-3 py-1 text-sm focus:outline-none focus:border-[#FFD700]">
+            </select>
+            <button onclick="editCurrentTitle()" style="margin-left: 8px; font-size: 14px;" title="Edit title">✎</button>
+          </div>
         </div>
         <button onclick="confirmDeleteNote()" 
                 class="px-4 py-1 text-sm text-red-400 border border-red-400/60 rounded-2xl hover:bg-red-900/30 transition-colors ml-3 flex-shrink-0">
@@ -346,8 +333,9 @@ ans * 2
   <!-- Status removed to save space -->
 
   <!-- Footer -->
-  <footer class="px-4 py-2 text-[10px] text-[#666] text-center border-t border-[#333] bg-[#1a1a1a] flex-shrink-0">
-    Vibe Code Using SuperGrok by Lawrence Lim <span id="footer-year">2026</span>
+  <footer class="px-4 py-1 text-[10px] text-[#666] border-t border-[#333] bg-[#1a1a1a] flex-shrink-0" style="display: flex; justify-content: space-between; align-items: center;">
+    <div id="footer-last" style="color: #4CAF50; font-size: 9px;"></div>
+    <div>Vibe Code Using SuperGrok by Lawrence Lim <span id="footer-year">2026</span></div>
   </footer>
 </div>
 
@@ -758,6 +746,7 @@ async function deleteNoteFromSupabase(id) {
 // ===================== UI & RENDER =====================
 function renderSidebar() {
   const container = document.getElementById('sidebar-list');
+  if (!container) return; // sidebar removed
   container.innerHTML = '';
 
   // Reorder if we have order
@@ -806,37 +795,22 @@ function selectNote(id) {
   const note = notes.find(n => n.id === id);
   if (!note) return;
 
-  document.getElementById('note-title').value = note.title || '';
+  const titleInput = document.getElementById('note-title');
+  if (titleInput) titleInput.value = note.title || '';
   document.getElementById('note-content').value = note.content || '';
-  renderSidebar();
+  // renderSidebar(); // removed
   renderResults();
   updateLastUpdated(note);
   populateNoteSelect();
-
-  // Auto collapse notes list on mobile after selection
-  if (window.innerWidth <= 640) {
-    const sidebar = document.getElementById('sidebar');
-    const arrow = document.getElementById('mobile-notes-arrow');
-    if (sidebar) sidebar.classList.remove('mobile-notes-expanded');
-    if (arrow) arrow.textContent = '▼';
-  }
 }
 
 function onTitleChange() {
-  if (!activeNoteId) return;
-  const titleInput = document.getElementById('note-title').value;
-  const note = notes.find(n => n.id === activeNoteId);
-  if (note) {
-    note.title = titleInput;
-    renderSidebar();
-    populateNoteSelect();
-    // autosave
-    saveActiveNoteDebounced();
-  }
+  // Title editing now done via editCurrentTitle() prompt (pencil icon)
+  // This function is kept for compatibility if input re-added
 }
 
 function updateLastUpdated(note) {
-  const el = document.getElementById('last-updated');
+  const el = document.getElementById('footer-last');
   if (!el) return;
   if (!note || !note.updatedAt) {
     el.textContent = '';
@@ -873,9 +847,21 @@ function populateNoteSelect() {
 function handleNoteSelect(value) {
   if (value === 'new') {
     createNewNote();
-    // After create, repopulate will be called
   } else {
     selectNote(value);
+  }
+}
+
+function editCurrentTitle() {
+  if (!activeNoteId) return;
+  const note = notes.find(n => n.id === activeNoteId);
+  if (!note) return;
+  const newTitle = prompt("Edit note title:", note.title || "Untitled");
+  if (newTitle !== null) {
+    note.title = newTitle;
+    updateNoteInSupabase(activeNoteId, { title: newTitle });
+    populateNoteSelect();
+    updateLastUpdated(note);
   }
 }
 

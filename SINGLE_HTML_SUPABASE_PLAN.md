@@ -402,6 +402,19 @@ python -m http.server 8080
 
 **This document preserves all memory.** Do not delete without copying key sections.
 
+## Latest Adjustments (from latest user feedback)
+
+- Removed left sidebar note list (A) — redundant now that pulldown select (D) exists for note selection.
+- Removed duplicate title display (B) in the main editor area.
+- Moved the "Last: ..." date/time info to the **bottom of the footer**, left-aligned (C).
+- Pulldown box (D) made narrower (200px width). The title text displayed in the pulldown is now **red**.
+- Added a small pencil (✎) icon next to the pulldown for editing the current note's title.
+- The <select> pulldown now serves as the primary note chooser and title display.
+
+These changes keep the UI clean, especially for mobile views, while preserving core functionality (Supabase login, calculations, note switching via pulldown, drag-reorder was in removed sidebar but list can be re-added if needed).
+
+**Status:** All changes applied to index.html. Test locally or push to GitHub for Vercel.
+
 ---
 
 ## Change Log – Implemented Features & UI Adjustments

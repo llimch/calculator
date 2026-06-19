@@ -57,6 +57,14 @@ npx serve .
 
 See the plan document for complete details and GitHub Action to prevent free-tier pausing.
 
+## Latest UI Adjustments
+- Removed left sidebar note list (redundant with pulldown select).
+- Removed duplicate title display.
+- Pulldown select narrower (200px); current title display in red.
+- Last updated date/time moved to footer (left aligned).
+- Small edit (✎) icon added next to pulldown for title changes.
+- Results width adjustable down to 50px in settings.
+
 ## Version Control
 All edits to `index.html` now follow the strict Version Control Procedure documented in `SINGLE_HTML_SUPABASE_PLAN.md`.
 

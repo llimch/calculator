@@ -2,7 +2,7 @@
 
 **Single self-contained `index.html` + Supabase for real user accounts and data.**
 
-**Current version: v12 (2026-06-19)** — see Changelog below.
+**Current version: v13 (2026-06-19)** — see Changelog below.
 
 ## Quick Start
 
@@ -27,7 +27,7 @@
 - Data stored safely in your Supabase Postgres project
 
 ## Files
-- `index.html` — the complete application (current **v12**)
+- `index.html` — the complete application (current **v13**)
 - `VersionControl/index.html.vNN.YYYYMMDD.HHMM` — historical snapshots (do not run)
 - `SINGLE_HTML_SUPABASE_PLAN.md` — full plan, schema, hosting guide, change log, and versioning procedure
 
@@ -62,10 +62,10 @@ See the plan document for complete details and GitHub Action to prevent free-tie
 
 ## Current Version
 
-**v12** (2026-06-19)
+**v13** (2026-06-19)
 
 The app version is shown in:
-- Main footer (e.g. `2026 • v12`)
+- Main footer (e.g. `2026 • v13`)
 - Login screen footer
 - Settings dropdown (bottom)
 
@@ -78,11 +78,23 @@ All changes to the live application follow the project's strict version control 
 3. `VersionControl/` is **history only** (do not open/run files from it).
 4. A new `APP_VERSION` constant + UI labels are added/updated for the release.
 
-**Latest snapshot:** `VersionControl/index.html.v12.20260619.2337`
+**Latest snapshot:** `VersionControl/index.html.v13.20260619.2350`
 
 **Policy introduced:** 2026-06-19
 
 ## Changelog
+
+### v13 (2026-06-19) — Dedicated operator toolbar line
+- Created a **new full-width toolbar row** directly below the header for the special keys/operators.
+- Made buttons significantly **larger** (18px font, comfortable tap targets) to fix the "too small and overlapping" issue.
+- **Removed** the `=` button and the dismiss/close (⌨︎) icon as requested.
+- Kept only: **ABC + − × ÷**
+- Toolbar is now **always visible** (no longer conditional on focus or header-inline).
+- Removed the previous cramped inline toolbar from inside the header.
+- Auto-focus editor when tapping toolbar buttons if needed.
+- Layout uses clean document flow (no overlaps with content or header elements).
+- Snapshot created per procedure: `VersionControl/index.html.v13.20260619.2350`
+- Bumped `APP_VERSION` to v13 (shown in footer, Settings, login).
 
 ### v12 (2026-06-19) — Header compaction + keyboard resilience + results cleanup
 - Removed the logo (NC) and "Notepad Calculator" main heading text to save vertical space.
@@ -109,5 +121,5 @@ See `SINGLE_HTML_SUPABASE_PLAN.md` (Change Log + Version Control sections) for t
 All edits follow the procedure in `SINGLE_HTML_SUPABASE_PLAN.md`.
 
 - Current live file: `index.html`
-- History: `VersionControl/` (v06 … v12)
+- History: `VersionControl/` (v06 … v13)
 - Git commits should include the new snapshot when bumping versions.

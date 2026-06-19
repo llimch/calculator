@@ -2,6 +2,8 @@
 
 **Single self-contained `index.html` + Supabase for real user accounts and data.**
 
+**Current version: v12 (2026-06-19)** — see Changelog below.
+
 ## Quick Start
 
 1. Open [SINGLE_HTML_SUPABASE_PLAN.md](SINGLE_HTML_SUPABASE_PLAN.md) and follow the **Supabase setup** section (5 minutes).
@@ -25,8 +27,9 @@
 - Data stored safely in your Supabase Postgres project
 
 ## Files
-- `index.html` — the complete application
-- `SINGLE_HTML_SUPABASE_PLAN.md` — full plan, schema, hosting guide, and rationale
+- `index.html` — the complete application (current **v12**)
+- `VersionControl/index.html.vNN.YYYYMMDD.HHMM` — historical snapshots (do not run)
+- `SINGLE_HTML_SUPABASE_PLAN.md` — full plan, schema, hosting guide, change log, and versioning procedure
 
 ## Cleanup
 Old Next.js files have been moved to the `bak/` folder.
@@ -57,48 +60,54 @@ npx serve .
 
 See the plan document for complete details and GitHub Action to prevent free-tier pausing.
 
-## Latest UI Adjustments
-- Removed left sidebar note list (redundant with pulldown select).
-- Removed duplicate title display.
-- Pulldown select narrower (200px); current title display in red.
-- Last updated date/time moved to footer (left aligned).
-- Small edit (✎) icon added next to pulldown for title changes.
-- Results width adjustable down to 50px in settings.
+## Current Version
 
-## Version Control
-All edits to `index.html` now follow the strict Version Control Procedure documented in `SINGLE_HTML_SUPABASE_PLAN.md`.
+**v12** (2026-06-19)
 
-Version history snapshots are kept in `VersionControl/`.
+The app version is shown in:
+- Main footer (e.g. `2026 • v12`)
+- Login screen footer
+- Settings dropdown (bottom)
+
+## Versioning Policy
+
+All changes to the live application follow the project's strict version control procedure (see `SINGLE_HTML_SUPABASE_PLAN.md` → "Version Control Procedure"):
+
+1. Before significant edits, the current `index.html` is snapshotted to `VersionControl/index.html.vNN.YYYYMMDD.HHMM`.
+2. Live file always remains `index.html` in the project root.
+3. `VersionControl/` is **history only** (do not open/run files from it).
+4. A new `APP_VERSION` constant + UI labels are added/updated for the release.
+
+**Latest snapshot:** `VersionControl/index.html.v12.20260619.2337`
 
 **Policy introduced:** 2026-06-19
 
-Current live file: `index.html` (in root)
-History-only directory: `VersionControl/` (do not run files from here)
+## Changelog
 
-**Developed following the original SteveRidout concept + local version simplification.**
-
-## Recent UI Updates (Implemented)
-- **Results column**: Width now adjustable in settings down to 50px (for large numbers like 8,888,888,888.00).
-- **New Note**: Replaced large button with small yellow "+" icon next to the gear.
-- **Note selection**: Added pulldown `<select>` for switching notes (includes "+ New Note"). Sidebar list remains for drag-reorder on desktop.
-
-### v10 (2026-06-19)
-- Removed duplicate top "+" button (new notes only via the dropdown's "+ New Note").
-- iPhone editor now defaults to numeric keyboard (`inputmode="decimal"` on content and title edit input).
-- Added floating operator toolbar (visible on focus) with + − × ÷ = buttons + ABC/123 toggle to switch back to full alpha keyboard.
-- Title editing upgraded to a modal (still defaults numeric).
+### v12 (2026-06-19) — Header compaction + keyboard resilience + results cleanup
+- Removed the logo (NC) and "Notepad Calculator" main heading text to save vertical space.
+- Moved the note dropdown (pull-down menu) into the primary header (replacing the removed title location).
+- **Special keys / operator toolbar** (ABC, + − × ÷ = ⌨︎) moved from the bottom of the screen to a compact row in the **top-right of the header**. This prevents the toolbar from being blanked out/covered when the iPhone virtual keyboard appears.
+- Removed the separate "note title bar" (the extra dark bar containing the select + Delete). All controls integrated into a single slim header for maximum editor space.
+- **"+ New Note"** removed from the dropdown selector (hard to reach when the list of notes is long).
+- Added a prominent **green "+" button** directly next to the pencil (✎) edit icon in the header for instant new note creation.
+- Removed all leading `=` characters from the **results panel** (left column). Values now display cleanly (e.g. `63295.15` instead of `= 63295.15`).
+- Added first-class **versioning**:
+  - `const APP_VERSION = 'v12';` defined in the source.
+  - Version rendered in footers and Settings panel.
+- Minor: tightened header padding and button sizes for the compact layout; snapshot procedure followed.
 
 ### v11 (2026-06-19)
-- Fixed unwanted iOS autofill bar (password, credit card, location icons) by adding proper `autocomplete="off"` + related attributes on the editor fields. Now delivers a clean standard or numeric keyboard without system suggestions.
-- **Note title bar**:
-  - Title styled light blue.
-  - Last updated shown in light green with full local time: `Last: 19/Jun/2026 (Fri) 10:23 pm`.
-- **Header on mobile**: Smaller title font. User email placed below Logout button.
-- **Sidebar**: "Notes" label removed. Mobile list collapsible via arrow.
-- **Footer**: Updated to `Vibe Code Using SuperGrok by Lawrence Lim YYYY` (dynamic year). Same text on login screen.
-- **Status bar**: Removed to reduce wasted space.
-- **Login screen**: Public sign-up completely removed. Only login allowed (admin adds users manually in Supabase). Enter key submits login.
-- **Settings**: Added Font Size +/- and Results Width controls.
-- **Mobile**: Improved layout, no overlapping, better space usage.
+- iOS autofill suppression, numeric keyboard defaults, operator toolbar (previous bottom version), title modal, font/results width settings, login-only flow, dynamic footer, etc. (see previous entries and `SINGLE_HTML_SUPABASE_PLAN.md` for details).
 
-See `SINGLE_HTML_SUPABASE_PLAN.md` (Change Log section) for full history and version snapshots.
+### v10 and earlier
+See `SINGLE_HTML_SUPABASE_PLAN.md` (Change Log + Version Control sections) for the complete prior history and all snapshots.
+
+**Developed following the original SteveRidout notepad-calculator concept.**
+
+## Version Control (summary)
+All edits follow the procedure in `SINGLE_HTML_SUPABASE_PLAN.md`.
+
+- Current live file: `index.html`
+- History: `VersionControl/` (v06 … v12)
+- Git commits should include the new snapshot when bumping versions.

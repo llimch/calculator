@@ -477,9 +477,10 @@ All changes were made to the single `index.html` while following the Version Con
 
 ### Version Control
 - Strict procedure followed: Before major edits, current `index.html` is copied to `VersionControl/index.html.vNN.YYYYMMDD.HHMM`.
-- Multiple snapshots created during development (v01 through v11).
+- Multiple snapshots created during development (v01 through v14).
 - v10 (20260619.2308): iPhone numeric keyboard default + custom operator toolbar with toggle.
 - v11 (20260619.2317): Suppressed iOS password/credit-card/location autofill suggestions for clean keyboard.
+- v14 (20260620): iOS Home Screen icon fixed — converted custom JPG design to proper PNGs (180/256/512), updated apple-touch-icon links and manifest (PNG + "any maskable"). Toolbar font bumped to 22px + added carriage return (↩) button to insert newlines. Snapshot v14 created. Follows same versioning procedure.
 
 ### Other
 - Mobile-first responsive adjustments for iPhone (narrow results, collapsible notes, pulldown selector, stacked header elements).

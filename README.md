@@ -2,7 +2,7 @@
 
 **Single self-contained `index.html` + Supabase for real user accounts and data.**
 
-**Current version: v13 (2026-06-19)** — see Changelog below.
+**Current version: v14 (2026-06-20)** — see Changelog below.
 
 ## Quick Start
 
@@ -27,7 +27,7 @@
 - Data stored safely in your Supabase Postgres project
 
 ## Files
-- `index.html` — the complete application (current **v13**)
+- `index.html` — the complete application (current **v14**)
 - `VersionControl/index.html.vNN.YYYYMMDD.HHMM` — historical snapshots (do not run)
 - `SINGLE_HTML_SUPABASE_PLAN.md` — full plan, schema, hosting guide, change log, and versioning procedure
 
@@ -62,10 +62,10 @@ See the plan document for complete details and GitHub Action to prevent free-tie
 
 ## Current Version
 
-**v13** (2026-06-19)
+**v14** (2026-06-20)
 
 The app version is shown in:
-- Main footer (e.g. `2026 • v13`)
+- Main footer (e.g. `2026 • v14`)
 - Login screen footer
 - Settings dropdown (bottom)
 
@@ -78,11 +78,24 @@ All changes to the live application follow the project's strict version control 
 3. `VersionControl/` is **history only** (do not open/run files from it).
 4. A new `APP_VERSION` constant + UI labels are added/updated for the release.
 
-**Latest snapshot:** `VersionControl/index.html.v13.20260619.2350`
+**Latest snapshot:** `VersionControl/index.html.v14.20260620.0015`
 
 **Policy introduced:** 2026-06-19
 
 ## Changelog
+
+### v14 (2026-06-20) — iOS Home Screen Icon Fix + Toolbar Polish
+- **iOS Add to Home Screen icon fixed** (was showing plain white/black square):
+  - The custom design (`grok-calculator-icon-1024.jpg`) was not being used because iOS Safari requires **PNG** format for `apple-touch-icon` (JPG links were ignored or caused fallback).
+  - Converted the source JPG to proper high-quality PNGs: `icon-180.png`, `icon-256.png`, `icon-512.png`.
+  - Updated all `<link rel="apple-touch-icon">` to point to PNGs (180/256/512 + non-sized fallback).
+  - Removed direct JPG references from apple-touch-icon and manifest.
+  - Updated `manifest.json` icons to use PNGs with `"purpose": "any maskable"` (matching the pattern that worked in the companion Timer project).
+- Toolbar improvements:
+  - Font size increased to **22px** for better visibility/tap targets.
+  - Added **carriage return / newline button** (`↩`) at the end of the operator row. Taps insert `\n` (new line) in the note.
+- Snapshot: `VersionControl/index.html.v14.20260620.0015`
+- Bumped `APP_VERSION` to v14.
 
 ### v13 (2026-06-19) — Dedicated operator toolbar line
 - Created a **new full-width toolbar row** directly below the header for the special keys/operators.
@@ -121,5 +134,5 @@ See `SINGLE_HTML_SUPABASE_PLAN.md` (Change Log + Version Control sections) for t
 All edits follow the procedure in `SINGLE_HTML_SUPABASE_PLAN.md`.
 
 - Current live file: `index.html`
-- History: `VersionControl/` (v06 … v13)
+- History: `VersionControl/` (v06 … v14)
 - Git commits should include the new snapshot when bumping versions.

@@ -1,5 +1,6 @@
 # Ignore heavy / unnecessary folders
-VersionControl/
+# VersionControl/ history is intentionally committed (per SINGLE_HTML_SUPABASE_PLAN.md)
+# VersionControl/
 node_modules/
 bak/
 .next/
@@ -12,3 +13,7 @@ bak/
 !README.md
 !SINGLE_HTML_SUPABASE_PLAN.md
 !favicon*
+
+# Explicitly allow version history files
+!VersionControl/index.html.v*.*
+!VersionControl/

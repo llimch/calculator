@@ -1,0 +1,22 @@
+{
+  "name": "Notepad Calculator",
+  "short_name": "NC",
+  "description": "Notepad + Calculator - Quick calculations with notes",
+  "icons": [
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#FFD700",
+  "orientation": "any"
+}

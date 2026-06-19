@@ -81,6 +81,15 @@ History-only directory: `VersionControl/` (do not run files from here)
 - **Results column**: Width now adjustable in settings down to 50px (for large numbers like 8,888,888,888.00).
 - **New Note**: Replaced large button with small yellow "+" icon next to the gear.
 - **Note selection**: Added pulldown `<select>` for switching notes (includes "+ New Note"). Sidebar list remains for drag-reorder on desktop.
+
+### v10 (2026-06-19)
+- Removed duplicate top "+" button (new notes only via the dropdown's "+ New Note").
+- iPhone editor now defaults to numeric keyboard (`inputmode="decimal"` on content and title edit input).
+- Added floating operator toolbar (visible on focus) with + − × ÷ = buttons + ABC/123 toggle to switch back to full alpha keyboard.
+- Title editing upgraded to a modal (still defaults numeric).
+
+### v11 (2026-06-19)
+- Fixed unwanted iOS autofill bar (password, credit card, location icons) by adding proper `autocomplete="off"` + related attributes on the editor fields. Now delivers a clean standard or numeric keyboard without system suggestions.
 - **Note title bar**:
   - Title styled light blue.
   - Last updated shown in light green with full local time: `Last: 19/Jun/2026 (Fri) 10:23 pm`.

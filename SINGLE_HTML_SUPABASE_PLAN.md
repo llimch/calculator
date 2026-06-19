@@ -417,6 +417,32 @@ These changes keep the UI clean, especially for mobile views, while preserving c
 
 ---
 
+## v10 Changes (2026-06-19) — iPhone Numeric Keyboard + Operator Toolbar
+
+**Version snapshot:** `VersionControl/index.html.v10.20260619.2308`
+
+### Changes Made
+- Removed the duplicate yellow "+" button from the top header (it duplicated the "+ New Note" option already present at the bottom of the note `<select>` pulldown).
+- Added `inputmode="decimal"` to the main editor `<textarea id="note-content">`. iPhone now defaults to the numeric/decimal keyboard when tapping to edit calculations or notes.
+- Title editing (`✎` pencil) was upgraded from `prompt()` to a proper centered modal. The title input also defaults to `inputmode="decimal"` for numeric preference on both sections.
+- Added a custom **operator toolbar** that appears (fixed at bottom) whenever the editor is focused:
+  - **ABC / 123** toggle button: switches `inputMode` between "decimal" (numeric) and "text" (standard alpha keyboard) and forces iOS to refresh the keyboard.
+  - Operator buttons: `+`  `−`  `×`  `÷`  `=` (inserts correct ASCII characters so the built-in calculator continues to parse expressions).
+  - Dismiss (⌨︎) button to hide toolbar and blur the field.
+- Toolbar provides the missing `+` and `-` (and other operators) without forcing users back to the full alpha keyboard permanently.
+- Follows user's explicit request: "defaulted to numeric as entry but allow toggle back to standard keyboard".
+- Applied to the primary content editor. Title modal gets numeric default via its input (toolbar kept off the modal to avoid UI overlap).
+
+All edits followed the Version Control Procedure (pre-edit snapshot captured as v10).
+
+## v11 (2026-06-19) — Remove unwanted iOS autofill bar
+- Added `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"`, `spellcheck="false"` to both the main editor textarea and the title edit input (statically + reinforced in JS on every focus and keyboard toggle).
+- This eliminates the iOS system autofill suggestion bar that was showing password (key), credit card, and location icons above the keyboard.
+- Result: Clean numeric keyboard by default (or standard full keyboard via the ABC/123 toggle) with only our operator toolbar, no extraneous system icons.
+- New snapshot: `VersionControl/index.html.v11.20260619.2317`
+
+---
+
 ## Change Log – Implemented Features & UI Adjustments
 
 All changes were made to the single `index.html` while following the Version Control Procedure (snapshots saved in `VersionControl/`).
@@ -451,7 +477,9 @@ All changes were made to the single `index.html` while following the Version Con
 
 ### Version Control
 - Strict procedure followed: Before major edits, current `index.html` is copied to `VersionControl/index.html.vNN.YYYYMMDD.HHMM`.
-- Multiple snapshots created during development (v01 through v09+).
+- Multiple snapshots created during development (v01 through v11).
+- v10 (20260619.2308): iPhone numeric keyboard default + custom operator toolbar with toggle.
+- v11 (20260619.2317): Suppressed iOS password/credit-card/location autofill suggestions for clean keyboard.
 
 ### Other
 - Mobile-first responsive adjustments for iPhone (narrow results, collapsible notes, pulldown selector, stacked header elements).

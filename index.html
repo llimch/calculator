@@ -45,8 +45,16 @@
       overflow-y: auto;
       pointer-events: none;
       user-select: none;
-      min-width: 180px;
+      min-width: 50px;
       flex-shrink: 0;
+    }
+
+    #note-select {
+      background: #252525;
+      color: #4FC3F7;
+      font-weight: 600;
+      font-size: 1rem;
+      border: 1px solid #333;
     }
     
     .result-line {
@@ -112,6 +120,35 @@
     .editor-bg { background: #1e1e1e; }
     
     .results-bg { background: #161616; }
+
+    /* Mobile adjustments */
+    @media (max-width: 640px) {
+      .header-title {
+        font-size: 0.95rem !important;
+        letter-spacing: -0.5px;
+      }
+      .mobile-compact {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+      }
+      .main-content {
+        flex-direction: column;
+      }
+      #sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #333;
+        order: -1; /* put sidebar on top on mobile */
+      }
+      #sidebar-list {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+      }
+      #sidebar.mobile-notes-expanded #sidebar-list {
+        max-height: 240px;
+      }
+    }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-[#121212] text-[#e0e0e0]">
@@ -127,56 +164,39 @@
       <p class="text-[#888] mt-1">Calculations that live in your notes</p>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex border-b border-[#333] mb-6">
-      <button onclick="showAuthTab('login')" id="tab-login"
-              class="flex-1 py-3 text-sm font-medium border-b-2 border-[#FFD700] text-white">Login</button>
-      <button onclick="showAuthTab('signup')" id="tab-signup"
-              class="flex-1 py-3 text-sm font-medium text-[#888]">Sign up</button>
+    <!-- Login Only - No public sign up -->
+    <div class="mb-4 text-center">
+      <p class="text-xs text-[#666]">Login only. New users are added manually by the administrator.</p>
     </div>
 
     <!-- Login Form -->
     <div id="form-login">
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs text-[#888] mb-1.5">Email</label>
-          <input id="login-email" type="email" value="demo@example.com"
-                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+      <form onsubmit="event.preventDefault(); handleLogin();">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-[#888] mb-1.5">Email</label>
+            <input id="login-email" type="email" value="demo@example.com"
+                   class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+          </div>
+          <div>
+            <label class="block text-xs text-[#888] mb-1.5">Password</label>
+            <input id="login-password" type="password" value="password123"
+                   class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+          </div>
+          <button type="submit" 
+                  class="w-full py-3 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl transition-colors">
+            Log in
+          </button>
         </div>
-        <div>
-          <label class="block text-xs text-[#888] mb-1.5">Password</label>
-          <input id="login-password" type="password" value="password123"
-                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
-        </div>
-        <button onclick="handleLogin()" 
-                class="w-full py-3 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl transition-colors">
-          Log in
-        </button>
-      </div>
-      <p class="text-center text-xs text-[#666] mt-4">Use any valid email + password (min 6 chars)</p>
-    </div>
-
-    <!-- Signup Form -->
-    <div id="form-signup" class="hidden">
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs text-[#888] mb-1.5">Email</label>
-          <input id="signup-email" type="email" placeholder="you@example.com"
-                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
-        </div>
-        <div>
-          <label class="block text-xs text-[#888] mb-1.5">Password (min 6 chars)</label>
-          <input id="signup-password" type="password" placeholder="••••••••"
-                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
-        </div>
-        <button onclick="handleSignUp()" 
-                class="w-full py-3 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl transition-colors">
-          Create account
-        </button>
-      </div>
+      </form>
+      <p class="text-center text-xs text-[#666] mt-4">Contact administrator for access.</p>
     </div>
 
     <div id="auth-error" class="hidden mt-4 p-3 bg-red-900/30 text-red-400 text-xs rounded-xl"></div>
+
+    <div class="mt-6 text-center text-[10px] text-[#666]">
+      Vibe Code Using SuperGrok by Lawrence Lim <span id="login-footer-year">2026</span>
+    </div>
   </div>
 </div>
 
@@ -189,14 +209,14 @@
         <div class="w-8 h-8 bg-[#FFD700] text-black rounded-xl flex items-center justify-center">
           <span class="font-bold text-lg">NC</span>
         </div>
-        <span class="font-bold text-xl tracking-tight gold">Notepad Calculator</span>
+        <span class="font-bold text-xl tracking-tight gold header-title">Notepad Calculator</span>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <div id="user-info" class="text-xs px-3 py-1.5 bg-[#252525] rounded-2xl text-[#aaa]"></div>
-      
-      <!-- Settings -->
+      <!-- New Note + and Settings -->
+      <button onclick="createNewNote()" 
+              class="text-2xl text-[#FFD700] font-bold px-1 hover:bg-[#252525] rounded" title="New Note">+</button>
       <div class="relative" id="settings-container">
         <button onclick="toggleSettings()" 
                 class="p-2 rounded-xl hover:bg-[#252525] transition-colors text-xl" title="Settings">⚙</button>
@@ -229,25 +249,50 @@
                       class="flex-1 py-1.5 text-sm rounded-xl border border-[#444]">Right →</button>
             </div>
           </div>
+
+          <!-- Font Size -->
+          <div class="mt-4">
+            <div class="text-xs font-medium mb-2 text-[#888]">Font Size</div>
+            <div class="flex items-center gap-2">
+              <button onclick="adjustFontSize(-1)" class="px-3 py-1 bg-[#333] rounded text-sm">-</button>
+              <span id="font-size-value" class="text-xs w-10 text-center">14px</span>
+              <button onclick="adjustFontSize(1)" class="px-3 py-1 bg-[#333] rounded text-sm">+</button>
+              <button onclick="resetFontSize()" class="ml-2 text-[10px] px-2 py-0.5 bg-[#444] rounded">Reset</button>
+            </div>
+          </div>
+
+          <!-- Results Width for A -->
+          <div class="mt-4">
+            <div class="text-xs font-medium mb-2 text-[#888]">Results Width</div>
+            <div class="flex items-center gap-2">
+              <button onclick="adjustResultsWidth(-10)" class="px-3 py-1 bg-[#333] rounded text-sm">-</button>
+              <span id="results-width-value" class="text-xs w-12 text-center">180px</span>
+              <button onclick="adjustResultsWidth(10)" class="px-3 py-1 bg-[#333] rounded text-sm">+</button>
+              <button onclick="resetResultsWidth()" class="ml-2 text-[10px] px-2 py-0.5 bg-[#444] rounded">Reset</button>
+            </div>
+            <div class="text-[9px] text-[#666] mt-1">For numbers up to 8,888,888,888.00</div>
+          </div>
         </div>
       </div>
 
-      <button onclick="handleLogout()" 
-              class="px-4 py-1.5 text-xs rounded-2xl bg-[#252525] hover:bg-red-900/40 transition-colors border border-[#444]">
-        Logout
-      </button>
+      <div class="flex flex-col items-end text-right">
+        <button onclick="handleLogout()" 
+                class="px-3 py-0.5 text-[10px] rounded-2xl bg-[#252525] hover:bg-red-900/40 transition-colors border border-[#444]">
+          Logout
+        </button>
+        <div id="user-info" class="text-[10px] text-[#888] mt-0.5"></div>
+      </div>
     </div>
   </header>
 
   <!-- Main Content -->
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex flex-1 overflow-hidden main-content">
     <!-- Sidebar -->
-    <div class="w-56 flex-shrink-0 flex flex-col border-r border-[#333] bg-[#1a1a1a]">
-      <div class="p-3">
-        <button onclick="createNewNote()"
-                class="w-full py-2.5 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
-          <span>+</span> <span>New Note</span>
-        </button>
+    <div id="sidebar" class="w-48 flex-shrink-0 flex flex-col border-r border-[#333] bg-[#1a1a1a]">
+      <!-- Mobile collapsible header for note titles -->
+      <div class="md:hidden px-3 py-1 flex items-center justify-between text-xs text-[#888] border-t border-[#333] cursor-pointer" onclick="toggleMobileNotes()">
+        <span></span>
+        <span id="mobile-notes-arrow">▼</span>
       </div>
       
       <div class="flex-1 overflow-y-auto px-1 pb-4" id="sidebar-list">
@@ -259,11 +304,18 @@
     <div class="flex-1 flex flex-col overflow-hidden" id="editor-area">
       <!-- Note title bar -->
       <div class="flex items-center px-4 py-2 bg-[#252525] border-b border-[#333] flex-shrink-0">
-        <input id="note-title" type="text" 
-               class="flex-1 bg-transparent text-lg font-semibold outline-none"
-               placeholder="Note title" oninput="onTitleChange()">
+        <div class="flex-1">
+          <select id="note-select" onchange="handleNoteSelect(this.value)" 
+                  class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-3 py-1 text-sm mb-1 focus:outline-none focus:border-[#FFD700]">
+          </select>
+          <input id="note-title" type="text" 
+                 class="w-full bg-transparent text-lg font-semibold outline-none"
+                 style="color: #4FC3F7;"
+                 placeholder="Note title" oninput="onTitleChange()">
+          <div id="last-updated" class="text-[10px] mt-0.5" style="color: #4CAF50;"></div>
+        </div>
         <button onclick="confirmDeleteNote()" 
-                class="px-4 py-1 text-sm text-red-400 border border-red-400/60 rounded-2xl hover:bg-red-900/30 transition-colors ml-3">
+                class="px-4 py-1 text-sm text-red-400 border border-red-400/60 rounded-2xl hover:bg-red-900/30 transition-colors ml-3 flex-shrink-0">
           Delete
         </button>
       </div>
@@ -273,7 +325,7 @@
         <!-- Results column (left or right) -->
         <div id="results-col" 
              class="results-column border-r border-[#333] results-bg text-[#FFD700] font-semibold flex-shrink-0"
-             style="width: 210px;"></div>
+             style="width: 180px;"></div>
 
         <!-- Textarea -->
         <textarea id="note-content" 
@@ -291,14 +343,11 @@ ans * 2
     </div>
   </div>
 
-  <!-- Status -->
-  <div id="status-bar" class="px-4 py-1 text-[10px] text-[#555] border-t border-[#333] flex-shrink-0 bg-[#1a1a1a]">
-    <span id="status-text">Ready • Data saved to Supabase</span>
-  </div>
+  <!-- Status removed to save space -->
 
   <!-- Footer -->
   <footer class="px-4 py-2 text-[10px] text-[#666] text-center border-t border-[#333] bg-[#1a1a1a] flex-shrink-0">
-    Vibe code by Grok by Lawrence Lim
+    Vibe Code Using SuperGrok by Lawrence Lim <span id="footer-year">2026</span>
   </footer>
 </div>
 
@@ -344,7 +393,9 @@ let activeNoteId = null;
 let settings = {
   darkMode: true,
   textColor: '#FFFFFF',
-  resultPosition: 'left'
+  resultPosition: 'left',
+  fontSize: 14,
+  resultsWidth: 180
 };
 let isSaving = false;
 let calculator = null;
@@ -576,28 +627,9 @@ function initSupabase() {
 }
 
 // ===================== AUTH =====================
+// Signup removed - users added manually in Supabase
 function showAuthTab(tab) {
-  const loginTab = document.getElementById('tab-login');
-  const signupTab = document.getElementById('tab-signup');
-  const loginForm = document.getElementById('form-login');
-  const signupForm = document.getElementById('form-signup');
-
-  if (tab === 'login') {
-    loginTab.classList.add('border-b-2', 'border-[#FFD700]', 'text-white');
-    loginTab.classList.remove('text-[#888]');
-    signupTab.classList.remove('border-b-2', 'border-[#FFD700]', 'text-white');
-    signupTab.classList.add('text-[#888]');
-    loginForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-  } else {
-    signupTab.classList.add('border-b-2', 'border-[#FFD700]', 'text-white');
-    signupTab.classList.remove('text-[#888]');
-    loginTab.classList.remove('border-b-2', 'border-[#FFD700]', 'text-white');
-    loginTab.classList.add('text-[#888]');
-    signupForm.classList.remove('hidden');
-    loginForm.classList.add('hidden');
-  }
-  document.getElementById('auth-error').classList.add('hidden');
+  // No-op - signup disabled
 }
 
 async function handleLogin() {
@@ -606,11 +638,15 @@ async function handleLogin() {
   const errEl = document.getElementById('auth-error');
   errEl.classList.add('hidden');
 
-  if (!supabaseClient) { showError('Supabase not configured'); return; }
+  if (!supabaseClient) { 
+    showError('Supabase not configured'); 
+    return; 
+  }
 
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-  if (error) showError(error.message);
-  else {
+  if (error) {
+    showError(error.message);
+  } else {
     // auth state listener will handle transition
   }
 }
@@ -774,6 +810,16 @@ function selectNote(id) {
   document.getElementById('note-content').value = note.content || '';
   renderSidebar();
   renderResults();
+  updateLastUpdated(note);
+  populateNoteSelect();
+
+  // Auto collapse notes list on mobile after selection
+  if (window.innerWidth <= 640) {
+    const sidebar = document.getElementById('sidebar');
+    const arrow = document.getElementById('mobile-notes-arrow');
+    if (sidebar) sidebar.classList.remove('mobile-notes-expanded');
+    if (arrow) arrow.textContent = '▼';
+  }
 }
 
 function onTitleChange() {
@@ -783,8 +829,53 @@ function onTitleChange() {
   if (note) {
     note.title = titleInput;
     renderSidebar();
+    populateNoteSelect();
     // autosave
     saveActiveNoteDebounced();
+  }
+}
+
+function updateLastUpdated(note) {
+  const el = document.getElementById('last-updated');
+  if (!el) return;
+  if (!note || !note.updatedAt) {
+    el.textContent = '';
+    return;
+  }
+  const date = new Date(note.updatedAt); // DB is UTC timestamptz; browser converts to local tz
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const d = date.getDate().toString().padStart(2, '0');
+  const m = date.toLocaleString('en', { month: 'short' });
+  const y = date.getFullYear();
+  const dow = dayNames[date.getDay()];
+  const time = date.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+  el.textContent = `Last: ${d}/${m}/${y} (${dow}) ${time}`;
+}
+
+function populateNoteSelect() {
+  const select = document.getElementById('note-select');
+  if (!select) return;
+  select.innerHTML = '';
+  notes.forEach(note => {
+    const opt = document.createElement('option');
+    opt.value = note.id;
+    opt.textContent = note.title || 'Untitled';
+    if (note.id === activeNoteId) opt.selected = true;
+    select.appendChild(opt);
+  });
+  // + New Note option
+  const newOpt = document.createElement('option');
+  newOpt.value = 'new';
+  newOpt.textContent = '+ New Note';
+  select.appendChild(newOpt);
+}
+
+function handleNoteSelect(value) {
+  if (value === 'new') {
+    createNewNote();
+    // After create, repopulate will be called
+  } else {
+    selectNote(value);
   }
 }
 
@@ -807,6 +898,7 @@ async function saveActiveNote() {
   try {
     await updateNoteInSupabase(activeNoteId, { title: note.title, content: note.content });
     updateStatus('Saved');
+    updateLastUpdated(note);
   } catch (e) {
     updateStatus('Save failed');
     console.error(e);
@@ -867,6 +959,7 @@ async function createNewNote() {
       activeNoteId = saved.id;
       renderSidebar();
       selectNote(saved.id);
+      populateNoteSelect();
     }
   } catch (e) {
     alert('Failed to create note: ' + e.message);
@@ -905,6 +998,7 @@ async function deleteActiveNote() {
     }
     renderSidebar();
     selectNote(activeNoteId);
+    populateNoteSelect();
   } catch (e) {
     alert('Delete failed: ' + e.message);
   }
@@ -1036,6 +1130,8 @@ function applySettings() {
   // persist settings locally (per device)
   localStorage.setItem('nc-settings', JSON.stringify(settings));
   renderColorSwatches();
+  applyFontSize();
+  applyResultsWidth();
 }
 
 function loadSettings() {
@@ -1045,12 +1141,64 @@ function loadSettings() {
   } catch (e) {}
 }
 
+function adjustFontSize(delta) {
+  settings.fontSize = Math.max(10, Math.min(24, (settings.fontSize || 14) + delta));
+  applyFontSize();
+}
+
+function resetFontSize() {
+  settings.fontSize = 14;
+  applyFontSize();
+}
+
+function applyFontSize() {
+  const textarea = document.getElementById('note-content');
+  const results = document.getElementById('results-col');
+  const size = (settings.fontSize || 14) + 'px';
+  if (textarea) textarea.style.fontSize = size;
+  if (results) results.style.fontSize = size;
+  const valueEl = document.getElementById('font-size-value');
+  if (valueEl) valueEl.textContent = size;
+  localStorage.setItem('nc-settings', JSON.stringify(settings));
+}
+
+function adjustResultsWidth(delta) {
+  settings.resultsWidth = Math.max(50, Math.min(300, (settings.resultsWidth || 180) + delta));
+  applyResultsWidth();
+}
+
+function resetResultsWidth() {
+  settings.resultsWidth = 180;
+  applyResultsWidth();
+}
+
+function applyResultsWidth() {
+  const results = document.getElementById('results-col');
+  const w = (settings.resultsWidth || 180) + 'px';
+  if (results) results.style.width = w;
+  const valueEl = document.getElementById('results-width-value');
+  if (valueEl) valueEl.textContent = w;
+  localStorage.setItem('nc-settings', JSON.stringify(settings));
+}
+
 function toggleSettings() {
   const dd = document.getElementById('settings-dropdown');
   dd.classList.toggle('hidden');
   if (!dd.classList.contains('hidden')) {
     renderColorSwatches();
+    const val = document.getElementById('font-size-value');
+    if (val) val.textContent = (settings.fontSize || 14) + 'px';
+    const rw = document.getElementById('results-width-value');
+    if (rw) rw.textContent = (settings.resultsWidth || 180) + 'px';
   }
+}
+
+function toggleMobileNotes() {
+  const sidebar = document.getElementById('sidebar');
+  const arrow = document.getElementById('mobile-notes-arrow');
+  if (!sidebar) return;
+  const isExpanded = sidebar.classList.toggle('mobile-notes-expanded');
+  if (arrow) arrow.textContent = isExpanded ? '▲' : '▼';
 }
 
 // Close settings when clicking outside
@@ -1096,6 +1244,7 @@ async function loadUserData() {
 
   renderSidebar();
   if (activeNoteId) selectNote(activeNoteId);
+  populateNoteSelect();
 
   // wire live editor
   const textarea = document.getElementById('note-content');
@@ -1131,6 +1280,8 @@ function setupAuthListener() {
 async function bootstrap() {
   initTailwind();
   loadSettings();
+  applyFontSize();
+  applyResultsWidth();
 
   const hasConfig = initSupabase();
   
@@ -1170,6 +1321,13 @@ async function bootstrap() {
       createNewNote();
     }
   });
+
+  // Set dynamic year in footer
+  const yearEl = document.getElementById('footer-year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  const loginYearEl = document.getElementById('login-footer-year');
+  if (loginYearEl) loginYearEl.textContent = new Date().getFullYear();
 
   console.log('%c[Notepad Calculator] Single-file app initialized. Replace Supabase keys.', 'color:#666');
 }

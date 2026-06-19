@@ -404,7 +404,57 @@ python -m http.server 8080
 
 ---
 
-**Status:** Ready to execute. All following actions (cleanup + build) will follow this plan exactly.
+## Change Log – Implemented Features & UI Adjustments
+
+All changes were made to the single `index.html` while following the Version Control Procedure (snapshots saved in `VersionControl/`).
+
+### Core Architecture
+- Converted from complex Next.js + localStorage to a **single self-contained static HTML file**.
+- Integrated **Supabase** for real user authentication (email/password) and per-user private note storage with Row Level Security (RLS).
+- Removed public sign-up. New users must be added manually by the administrator directly in Supabase.
+- Added `vercel.json` for clean Vercel deployment.
+- Enter key on login form now submits the "Log in" button.
+- Full support for local testing (`python -m http.server` or `npx serve`).
+
+### Hosting & Deployment
+- Primary hosting: **Vercel** (free static hosting) connected to GitHub repo `https://github.com/llimch/calculator.git`.
+- Local run supported without Vercel.
+
+### UI & Layout Improvements
+- **New Note button**: Replaced large yellow "+ New Note" button with a small yellow "+" icon placed beside the gear/settings button.
+- **Sidebar**: Narrowed to `w-48`. Removed redundant "Notes" label. On mobile, notes list is collapsed by default with arrow toggle to expand/collapse.
+- **Note selection**: Added a pulldown `<select>` in the title bar area. Lists all notes + "+ New Note" option. Selecting a note loads it into the editor. Current note title is displayed in the select.
+- **Note title bar**:
+  - Note title input styled in **light blue**.
+  - Added **last updated** display in **light green**.
+  - Format: `Last: 19/Jun/2026 (Fri) 10:23 pm` (UTC stored in DB, displayed in user's local timezone with date + time).
+- **Results column**: Width now configurable in settings (down to 50px). Default ~180px. Supports numbers up to 8,888,888,888.00.
+- **Font size**: +/- controls added in settings (10px–24px range) + Reset. Persists in browser.
+- **Header on mobile**: "Notepad Calculator" title uses smaller font. User email moved below the Logout button for better space usage.
+- **Footer**: Updated to "Vibe Code Using SuperGrok by Lawrence Lim YYYY" (year is dynamic via JavaScript and updates automatically). Same footer added to login screen.
+- **Status bar**: Removed the "Connected to Supabase" bar to save vertical space.
+- **Settings panel (gear)**: Added Font Size and Results Width controls.
+- **Login screen**: Public sign-up completely removed. Only login form + message that new users are added manually by administrator. Footer updated.
+
+### Version Control
+- Strict procedure followed: Before major edits, current `index.html` is copied to `VersionControl/index.html.vNN.YYYYMMDD.HHMM`.
+- Multiple snapshots created during development (v01 through v09+).
+
+### Other
+- Mobile-first responsive adjustments for iPhone (narrow results, collapsible notes, pulldown selector, stacked header elements).
+- Supabase keys remain in `index.html` (standard for client-side static apps; security relies on RLS policies).
+
+**Current recommended files to push to GitHub:**
+- `index.html`
+- `vercel.json`
+- `README.md`
+- `SINGLE_HTML_SUPABASE_PLAN.md`
+- `.gitignore`
+- `VersionControl/` (history)
+
+---
+
+**Status:** All requested changes implemented and documented. Ready for local testing and Vercel deployment.
 
 ## Version Control Procedure (index.html only)
 Primary source file: `index.html`

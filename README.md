@@ -68,3 +68,20 @@ Current live file: `index.html` (in root)
 History-only directory: `VersionControl/` (do not run files from here)
 
 **Developed following the original SteveRidout concept + local version simplification.**
+
+## Recent UI Updates (Implemented)
+- **Results column**: Width now adjustable in settings down to 50px (for large numbers like 8,888,888,888.00).
+- **New Note**: Replaced large button with small yellow "+" icon next to the gear.
+- **Note selection**: Added pulldown `<select>` for switching notes (includes "+ New Note"). Sidebar list remains for drag-reorder on desktop.
+- **Note title bar**:
+  - Title styled light blue.
+  - Last updated shown in light green with full local time: `Last: 19/Jun/2026 (Fri) 10:23 pm`.
+- **Header on mobile**: Smaller title font. User email placed below Logout button.
+- **Sidebar**: "Notes" label removed. Mobile list collapsible via arrow.
+- **Footer**: Updated to `Vibe Code Using SuperGrok by Lawrence Lim YYYY` (dynamic year). Same text on login screen.
+- **Status bar**: Removed to reduce wasted space.
+- **Login screen**: Public sign-up completely removed. Only login allowed (admin adds users manually in Supabase). Enter key submits login.
+- **Settings**: Added Font Size +/- and Results Width controls.
+- **Mobile**: Improved layout, no overlapping, better space usage.
+
+See `SINGLE_HTML_SUPABASE_PLAN.md` (Change Log section) for full history and version snapshots.

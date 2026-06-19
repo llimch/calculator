@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notepad Calculator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'%3E%3Crect width='32' height='32' fill='%23121212' rx='4'/%3E%3C!-- Notepad --%3E%3Crect x='3' y='3' width='18' height='26' rx='2' fill='%23f5f5f5'/%3E%3Cline x1='6' y1='9' x2='18' y2='9' stroke='%23333' stroke-width='1.2'/%3E%3Cline x1='6' y1='12' x2='18' y2='12' stroke='%23333' stroke-width='1.2'/%3E%3Cline x1='6' y1='15' x2='18' y2='15' stroke='%23333' stroke-width='1.2'/%3E%3Cline x1='6' y1='18' x2='18' y2='18' stroke='%23333' stroke-width='1.2'/%3E%3Cline x1='6' y1='21' x2='18' y2='21' stroke='%23333' stroke-width='1.2'/%3E%3C!-- Calculator overlay --%3E%3Crect x='18' y='5' width='11' height='22' rx='2' fill='%23222'/%3E%3Crect x='19.5' y='7' width='8' height='4' fill='%23333' rx='1'/%3E%3Cg fill='%23FFD700' font-size='3'%3E%3Ctext x='20' y='15'%3E1%3C/text%3E%3Ctext x='23.5' y='15'%3E2%3C/text%3E%3Ctext x='27' y='15'%3E+%3C/text%3E%3Ctext x='20' y='19'%3E3%3C/text%3E%3Ctext x='23.5' y='19'%3E4%3C/text%3E%3Ctext x='27' y='19'%3E=%3C/text%3E%3C/g%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap');
+    
+    :root {
+      --accent: #FFD700;
+    }
+    
+    body { font-family: 'Inter', system_ui, sans-serif; }
+    
+    .mono {
+      font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 14px;
+      line-height: 24px;
+    }
+    
+    .note-textarea {
+      font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 14px;
+      line-height: 24px;
+      padding: 12px;
+      resize: none;
+      outline: none;
+      border: none;
+      background: transparent;
+      width: 100%;
+      height: 100%;
+      white-space: pre;
+      overflow-wrap: normal;
+    }
+    
+    .results-column {
+      font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 14px;
+      line-height: 24px;
+      padding: 12px;
+      overflow-y: auto;
+      pointer-events: none;
+      user-select: none;
+      min-width: 180px;
+      flex-shrink: 0;
+    }
+    
+    .result-line {
+      height: 24px;
+      line-height: 24px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .sidebar-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: grab;
+      transition: background-color 0.1s;
+      user-select: none;
+    }
+    
+    .sidebar-item:hover { opacity: 0.9; }
+    
+    .sidebar-item.active {
+      font-weight: 600;
+    }
+    
+    .settings-dropdown {
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+    
+    .color-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 9999px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.1s;
+    }
+    
+    .color-swatch.selected {
+      border-color: #FFD700;
+      transform: scale(1.1);
+    }
+    
+    .modal {
+      animation: fadeInScale 0.1s ease-out forwards;
+    }
+    
+    .editor-container {
+      font-size: 14px;
+    }
+    
+    .gold { color: #FFD700; }
+    
+    .app-header {
+      background: #1e1e1e;
+      border-bottom: 1px solid #333;
+    }
+    
+    .main-bg { background: #121212; }
+    
+    .editor-bg { background: #1e1e1e; }
+    
+    .results-bg { background: #161616; }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-[#121212] text-[#e0e0e0]">
+
+<!-- ========== AUTH SCREEN ========== -->
+<div id="auth-screen" class="flex-1 flex items-center justify-center bg-[#121212]">
+  <div class="w-full max-w-sm mx-4">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-[#FFD700] text-black rounded-2xl mb-4">
+        <span class="text-3xl font-bold">NC</span>
+      </div>
+      <h1 class="text-3xl font-semibold tracking-tight">Notepad Calculator</h1>
+      <p class="text-[#888] mt-1">Calculations that live in your notes</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-[#333] mb-6">
+      <button onclick="showAuthTab('login')" id="tab-login"
+              class="flex-1 py-3 text-sm font-medium border-b-2 border-[#FFD700] text-white">Login</button>
+      <button onclick="showAuthTab('signup')" id="tab-signup"
+              class="flex-1 py-3 text-sm font-medium text-[#888]">Sign up</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="form-login">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-[#888] mb-1.5">Email</label>
+          <input id="login-email" type="email" value="demo@example.com"
+                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+        </div>
+        <div>
+          <label class="block text-xs text-[#888] mb-1.5">Password</label>
+          <input id="login-password" type="password" value="password123"
+                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+        </div>
+        <button onclick="handleLogin()" 
+                class="w-full py-3 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl transition-colors">
+          Log in
+        </button>
+      </div>
+      <p class="text-center text-xs text-[#666] mt-4">Use any valid email + password (min 6 chars)</p>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="form-signup" class="hidden">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-[#888] mb-1.5">Email</label>
+          <input id="signup-email" type="email" placeholder="you@example.com"
+                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+        </div>
+        <div>
+          <label class="block text-xs text-[#888] mb-1.5">Password (min 6 chars)</label>
+          <input id="signup-password" type="password" placeholder="••••••••"
+                 class="w-full bg-[#1e1e1e] border border-[#333] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FFD700]">
+        </div>
+        <button onclick="handleSignUp()" 
+                class="w-full py-3 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl transition-colors">
+          Create account
+        </button>
+      </div>
+    </div>
+
+    <div id="auth-error" class="hidden mt-4 p-3 bg-red-900/30 text-red-400 text-xs rounded-xl"></div>
+  </div>
+</div>
+
+<!-- ========== MAIN APP (hidden until logged in) ========== -->
+<div id="app-screen" class="hidden h-screen flex flex-col">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-4 py-2 flex-shrink-0 app-header">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-[#FFD700] text-black rounded-xl flex items-center justify-center">
+          <span class="font-bold text-lg">NC</span>
+        </div>
+        <span class="font-bold text-xl tracking-tight gold">Notepad Calculator</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div id="user-info" class="text-xs px-3 py-1.5 bg-[#252525] rounded-2xl text-[#aaa]"></div>
+      
+      <!-- Settings -->
+      <div class="relative" id="settings-container">
+        <button onclick="toggleSettings()" 
+                class="p-2 rounded-xl hover:bg-[#252525] transition-colors text-xl" title="Settings">⚙</button>
+        
+        <!-- Settings Dropdown -->
+        <div id="settings-dropdown" class="hidden absolute right-0 top-full mt-1 settings-dropdown bg-[#2a2a2a] border border-[#444] rounded-2xl p-5 w-64 z-50 text-sm">
+          <div class="mb-4">
+            <div class="text-xs font-medium mb-2 text-[#888]">Theme</div>
+            <div class="flex gap-2">
+              <button onclick="setTheme(true)" id="btn-dark"
+                      class="flex-1 py-1.5 rounded-xl text-sm font-medium border border-[#FFD700] bg-[#FFD700] text-black">🌙 Dark</button>
+              <button onclick="setTheme(false)" id="btn-light"
+                      class="flex-1 py-1.5 rounded-xl text-sm font-medium border border-[#444]">☀ Light</button>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-xs font-medium mb-2 text-[#888]">Text Color</div>
+            <div class="flex flex-wrap gap-1.5" id="color-swatches">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs font-medium mb-2 text-[#888]">Result Position</div>
+            <div class="flex gap-2">
+              <button onclick="setResultPosition('left')" id="pos-left"
+                      class="flex-1 py-1.5 text-sm rounded-xl border border-[#FFD700] bg-[#FFD700] text-black font-medium">← Left</button>
+              <button onclick="setResultPosition('right')" id="pos-right"
+                      class="flex-1 py-1.5 text-sm rounded-xl border border-[#444]">Right →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="handleLogout()" 
+              class="px-4 py-1.5 text-xs rounded-2xl bg-[#252525] hover:bg-red-900/40 transition-colors border border-[#444]">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-56 flex-shrink-0 flex flex-col border-r border-[#333] bg-[#1a1a1a]">
+      <div class="p-3">
+        <button onclick="createNewNote()"
+                class="w-full py-2.5 bg-[#FFD700] hover:bg-[#E6C200] text-black font-semibold rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
+          <span>+</span> <span>New Note</span>
+        </button>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto px-1 pb-4" id="sidebar-list">
+        <!-- Notes populated by JS -->
+      </div>
+    </div>
+
+    <!-- Editor Area -->
+    <div class="flex-1 flex flex-col overflow-hidden" id="editor-area">
+      <!-- Note title bar -->
+      <div class="flex items-center px-4 py-2 bg-[#252525] border-b border-[#333] flex-shrink-0">
+        <input id="note-title" type="text" 
+               class="flex-1 bg-transparent text-lg font-semibold outline-none"
+               placeholder="Note title" oninput="onTitleChange()">
+        <button onclick="confirmDeleteNote()" 
+                class="px-4 py-1 text-sm text-red-400 border border-red-400/60 rounded-2xl hover:bg-red-900/30 transition-colors ml-3">
+          Delete
+        </button>
+      </div>
+
+      <!-- Split editor -->
+      <div class="flex-1 flex overflow-hidden editor-bg" id="editor-pane">
+        <!-- Results column (left or right) -->
+        <div id="results-col" 
+             class="results-column border-r border-[#333] results-bg text-[#FFD700] font-semibold flex-shrink-0"
+             style="width: 210px;"></div>
+
+        <!-- Textarea -->
+        <textarea id="note-content" 
+                  class="note-textarea flex-1 text-[#e0e0e0] p-3 bg-transparent"
+                  placeholder="Type calculations and notes here...
+
+Examples:
+100 + 200
+price = 50
+tax = price * 10%
+price + tax
+ans * 2
+200 + 15%"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status-bar" class="px-4 py-1 text-[10px] text-[#555] border-t border-[#333] flex-shrink-0 bg-[#1a1a1a]">
+    <span id="status-text">Ready • Data saved to Supabase</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="px-4 py-2 text-[10px] text-[#666] text-center border-t border-[#333] bg-[#1a1a1a] flex-shrink-0">
+    Vibe code by Grok by Lawrence Lim
+  </footer>
+</div>
+
+<!-- Delete Modal -->
+<div id="delete-modal" onclick="hideDeleteModal()" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+  <div onclick="event.stopImmediatePropagation()" class="modal bg-[#2a2a2a] rounded-3xl p-6 w-full max-w-xs border border-[#444]">
+    <h3 class="font-semibold text-lg mb-1">Delete note?</h3>
+    <p class="text-sm text-[#aaa] mb-5" id="delete-note-name">This action cannot be undone.</p>
+    <div class="flex gap-3">
+      <button onclick="hideDeleteModal()" 
+              class="flex-1 py-2 border border-[#555] rounded-2xl text-sm">Cancel</button>
+      <button onclick="deleteActiveNote()" 
+              class="flex-1 py-2 bg-red-500 hover:bg-red-600 rounded-2xl text-sm font-medium">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== CONFIG - REPLACE WITH YOUR SUPABASE VALUES =====================
+const SUPABASE_URL = 'https://YOUR-PROJECT-ID.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...YOUR-ANON-KEY-HERE...';
+
+// Tailwind runtime config
+function initTailwind() {
+  if (window.tailwind) {
+    window.tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: '#FFD700'
+          }
+        }
+      }
+    };
+  }
+}
+
+// ===================== GLOBAL STATE =====================
+let supabaseClient = null;
+let currentUser = null;
+let notes = [];
+let activeNoteId = null;
+let settings = {
+  darkMode: true,
+  textColor: '#FFFFFF',
+  resultPosition: 'left'
+};
+let isSaving = false;
+let calculator = null;
+
+// ===================== CALCULATOR (ported from original calculator.ts) =====================
+const Calculator = {
+  formatNumber(value, forceTwoDecimals = false) {
+    if (forceTwoDecimals) {
+      const fixed = value.toFixed(2);
+      const parts = fixed.split('.');
+      let intPart = parts[0];
+      let isNeg = false;
+      if (intPart.startsWith('-')) { isNeg = true; intPart = intPart.slice(1); }
+      intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      if (isNeg) intPart = '-' + intPart;
+      return intPart + '.' + parts[1];
+    }
+    const rounded = Math.round(value * 1000000) / 1000000;
+    const str = rounded.toString();
+    const parts = str.split('.');
+    let intPart = parts[0];
+    let isNeg = false;
+    if (intPart.startsWith('-')) { isNeg = true; intPart = intPart.slice(1); }
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (isNeg) intPart = '-' + intPart;
+    return parts.length > 1 ? intPart + '.' + parts[1] : intPart;
+  },
+
+  tokenize(expr) {
+    const tokens = [];
+    let i = 0;
+    while (i < expr.length) {
+      const ch = expr[i];
+      if (/\s/.test(ch)) { i++; continue; }
+      if (/[\d.]/.test(ch)) {
+        let num = '';
+        while (i < expr.length && /[\d.]/.test(expr[i])) { num += expr[i]; i++; }
+        const parsed = parseFloat(num);
+        if (isNaN(parsed)) throw new Error('Invalid number');
+        tokens.push({ type: 'number', value: parsed });
+        continue;
+      }
+      if ('+-*/^'.includes(ch)) { tokens.push({ type: 'op', value: ch }); i++; continue; }
+      if (ch === '(') { tokens.push({ type: 'lparen' }); i++; continue; }
+      if (ch === ')') { tokens.push({ type: 'rparen' }); i++; continue; }
+      if (ch === '%') { tokens.push({ type: 'percent' }); i++; continue; }
+      throw new Error('Unknown character: ' + ch);
+    }
+    return tokens;
+  },
+
+  evaluateExpression(expr) {
+    const tokens = this.tokenize(expr);
+    return this.parseTokens(tokens);
+  },
+
+  parseTokens(tokens) {
+    let pos = 0;
+    const peek = () => pos < tokens.length ? tokens[pos] : null;
+    const consume = () => tokens[pos++];
+
+    function expression() {
+      let left = term();
+      while (peek() && peek().type === 'op' && ['+', '-'].includes(peek().value)) {
+        const op = consume().value;
+        const right = term();
+        if (right.isPercent) {
+          left = { value: op === '+' ? left.value + left.value * right.value : left.value - left.value * right.value, isPercent: false };
+        } else {
+          left = { value: op === '+' ? left.value + right.value : left.value - right.value, isPercent: false };
+        }
+      }
+      return left;
+    }
+
+    function term() {
+      let left = power();
+      while (peek() && peek().type === 'op' && ['*', '/'].includes(peek().value)) {
+        const op = consume().value;
+        const right = power();
+        if (op === '*') {
+          left = { value: left.value * right.value, isPercent: false };
+        } else {
+          if (right.value === 0) throw new Error('Division by zero');
+          left = { value: left.value / right.value, isPercent: false };
+        }
+      }
+      return left;
+    }
+
+    function power() {
+      let base = unary();
+      while (peek() && peek().type === 'op' && peek().value === '^') {
+        consume();
+        const exp = unary();
+        base = { value: Math.pow(base.value, exp.value), isPercent: false };
+      }
+      return base;
+    }
+
+    function unary() {
+      const t = peek();
+      if (t && t.type === 'op' && t.value === '-') {
+        consume();
+        const res = unary();
+        return { value: -res.value, isPercent: res.isPercent };
+      }
+      if (t && t.type === 'op' && t.value === '+') {
+        consume();
+        return unary();
+      }
+      return atom();
+    }
+
+    function atom() {
+      const t = peek();
+      if (!t) throw new Error('Unexpected end of expression');
+      if (t.type === 'number') {
+        consume();
+        if (peek() && peek().type === 'percent') {
+          consume();
+          return { value: t.value / 100, isPercent: true };
+        }
+        return { value: t.value, isPercent: false };
+      }
+      if (t.type === 'lparen') {
+        consume();
+        const res = expression();
+        if (!peek() || peek().type !== 'rparen') throw new Error('Missing closing parenthesis');
+        consume();
+        if (peek() && peek().type === 'percent') {
+          consume();
+          return { value: res.value / 100, isPercent: true };
+        }
+        return res;
+      }
+      throw new Error('Unexpected token');
+    }
+
+    if (tokens.length === 0) throw new Error('Empty expression');
+    const result = expression();
+    if (pos < tokens.length) throw new Error('Unexpected token');
+    return result.value;
+  },
+
+  preprocessLine(rawLine, previousAnswer, variables) {
+    let line = rawLine.trim();
+    if (!line) return null;
+
+    // Strip comments
+    const colonIdx = line.indexOf(':');
+    const quoteIdx = line.indexOf("'");
+    let commentIdx = -1;
+    if (colonIdx !== -1 && quoteIdx !== -1) commentIdx = Math.min(colonIdx, quoteIdx);
+    else if (colonIdx !== -1) commentIdx = colonIdx;
+    else if (quoteIdx !== -1) commentIdx = quoteIdx;
+    
+    if (commentIdx !== -1) line = line.substring(0, commentIdx).trim();
+    if (!line) return null;
+
+    let assignTo = null;
+    const assignMatch = line.match(/^([a-zA-Z_]\w*)\s*=\s*(.+)$/);
+    if (assignMatch && assignMatch[1].toLowerCase() !== 'ans') {
+      assignTo = assignMatch[1];
+      line = assignMatch[2];
+    }
+
+    const hasDollar = line.includes('$');
+    line = line.replace(/\$/g, '');
+
+    let prev = '';
+    while (prev !== line) {
+      prev = line;
+      line = line.replace(/(\d),(\d{3})/g, '$1$2');
+    }
+
+    if (/^[+\-*/]/.test(line) && previousAnswer !== null) {
+      line = '(' + previousAnswer + ')' + line;
+    }
+
+    if (previousAnswer !== null) {
+      line = line.replace(/\bans\b/gi, '(' + previousAnswer + ')');
+    }
+
+    for (const [name, val] of Object.entries(variables)) {
+      const regex = new RegExp('\\b' + name + '\\b', 'g');
+      line = line.replace(regex, '(' + val + ')');
+    }
+
+    return { expr: line, assignTo, hasDollar };
+  },
+
+  evaluateLines(lines) {
+    const results = [];
+    let previousAnswer = null;
+    const variables = {};
+
+    for (const raw of lines) {
+      const pre = this.preprocessLine(raw, previousAnswer, variables);
+      if (!pre) {
+        results.push({ value: null, display: '' });
+        continue;
+      }
+      try {
+        const value = this.evaluateExpression(pre.expr);
+        if (isNaN(value) || !isFinite(value)) {
+          results.push({ value: null, display: '' });
+          continue;
+        }
+        if (pre.assignTo) variables[pre.assignTo] = value;
+        previousAnswer = value;
+        results.push({ value, display: '= ' + this.formatNumber(value, pre.hasDollar) });
+      } catch (e) {
+        results.push({ value: null, display: '' });
+      }
+    }
+    return results;
+  }
+};
+
+// ===================== SUPABASE INIT =====================
+function initSupabase() {
+  if (!SUPABASE_URL.includes('YOUR-PROJECT') && window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  }
+  console.warn('Supabase not configured. Using placeholders.');
+  return false;
+}
+
+// ===================== AUTH =====================
+function showAuthTab(tab) {
+  const loginTab = document.getElementById('tab-login');
+  const signupTab = document.getElementById('tab-signup');
+  const loginForm = document.getElementById('form-login');
+  const signupForm = document.getElementById('form-signup');
+
+  if (tab === 'login') {
+    loginTab.classList.add('border-b-2', 'border-[#FFD700]', 'text-white');
+    loginTab.classList.remove('text-[#888]');
+    signupTab.classList.remove('border-b-2', 'border-[#FFD700]', 'text-white');
+    signupTab.classList.add('text-[#888]');
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+  } else {
+    signupTab.classList.add('border-b-2', 'border-[#FFD700]', 'text-white');
+    signupTab.classList.remove('text-[#888]');
+    loginTab.classList.remove('border-b-2', 'border-[#FFD700]', 'text-white');
+    loginTab.classList.add('text-[#888]');
+    signupForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+  }
+  document.getElementById('auth-error').classList.add('hidden');
+}
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.classList.add('hidden');
+
+  if (!supabaseClient) { showError('Supabase not configured'); return; }
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+  if (error) showError(error.message);
+  else {
+    // auth state listener will handle transition
+  }
+}
+
+async function handleSignUp() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.classList.add('hidden');
+
+  if (!supabaseClient) { showError('Supabase not configured'); return; }
+  if (pass.length < 6) { showError('Password must be at least 6 characters'); return; }
+
+  const { error } = await supabaseClient.auth.signUp({ email, password: pass });
+  if (error) {
+    showError(error.message);
+  } else {
+    // For simplicity we auto-login after signup or show message
+    showError('Account created. Logging in...');
+    // Try direct login
+    setTimeout(async () => {
+      const { error: loginErr } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+      if (loginErr) showError('Signup succeeded. Please log in manually.');
+    }, 800);
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+async function handleLogout() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+// ===================== NOTES & DATA =====================
+async function loadNotesFromSupabase() {
+  if (!supabaseClient || !currentUser) return [];
+  const { data, error } = await supabaseClient
+    .from('notes')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('updated_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return (data || []).map(n => ({
+    id: n.id,
+    title: n.title,
+    content: n.content,
+    createdAt: new Date(n.created_at).getTime(),
+    updatedAt: new Date(n.updated_at).getTime()
+  }));
+}
+
+async function loadNoteOrder() {
+  if (!supabaseClient || !currentUser) return null;
+  const { data } = await supabaseClient
+    .from('note_order')
+    .select('note_ids')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+  return data?.note_ids || null;
+}
+
+async function saveNoteOrder(ids) {
+  if (!supabaseClient || !currentUser) return;
+  await supabaseClient
+    .from('note_order')
+    .upsert({ user_id: currentUser.id, note_ids: ids }, { onConflict: 'user_id' });
+}
+
+async function createNoteInSupabase(noteData) {
+  if (!supabaseClient || !currentUser) return null;
+  const { data, error } = await supabaseClient
+    .from('notes')
+    .insert({
+      user_id: currentUser.id,
+      title: noteData.title,
+      content: noteData.content
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id,
+    title: data.title,
+    content: data.content,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+}
+
+async function updateNoteInSupabase(id, update) {
+  if (!supabaseClient || !currentUser) return;
+  await supabaseClient
+    .from('notes')
+    .update({ title: update.title, content: update.content })
+    .eq('id', id)
+    .eq('user_id', currentUser.id);
+}
+
+async function deleteNoteFromSupabase(id) {
+  if (!supabaseClient || !currentUser) return;
+  await supabaseClient.from('notes').delete().eq('id', id).eq('user_id', currentUser.id);
+}
+
+// ===================== UI & RENDER =====================
+function renderSidebar() {
+  const container = document.getElementById('sidebar-list');
+  container.innerHTML = '';
+
+  // Reorder if we have order
+  let displayNotes = [...notes];
+  // For simplicity keep current order or sort by updated desc if needed
+
+  displayNotes.forEach((note, index) => {
+    const div = document.createElement('div');
+    div.className = `sidebar-item text-sm ${note.id === activeNoteId ? 'active bg-[#2a2a2a]' : ''}`;
+    div.textContent = note.title || 'Untitled';
+    div.draggable = true;
+    
+    div.onclick = () => selectNote(note.id);
+    
+    div.ondragstart = (e) => {
+      e.dataTransfer.setData('text/plain', index.toString());
+      setTimeout(() => div.style.opacity = '0.4', 0);
+    };
+    div.ondragend = () => div.style.opacity = '1';
+    div.ondragover = (e) => { e.preventDefault(); div.style.borderTop = '2px solid #FFD700'; };
+    div.ondragleave = () => div.style.borderTop = '2px solid transparent';
+    div.ondrop = async (e) => {
+      e.preventDefault();
+      div.style.borderTop = '2px solid transparent';
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      if (fromIdx === index) return;
+      const reordered = [...notes];
+      const [moved] = reordered.splice(fromIdx, 1);
+      reordered.splice(index, 0, moved);
+      notes = reordered;
+      renderSidebar();
+      await saveCurrentOrder();
+    };
+    
+    container.appendChild(div);
+  });
+}
+
+async function saveCurrentOrder() {
+  const ids = notes.map(n => n.id);
+  await saveNoteOrder(ids);
+}
+
+function selectNote(id) {
+  activeNoteId = id;
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+
+  document.getElementById('note-title').value = note.title || '';
+  document.getElementById('note-content').value = note.content || '';
+  renderSidebar();
+  renderResults();
+}
+
+function onTitleChange() {
+  if (!activeNoteId) return;
+  const titleInput = document.getElementById('note-title').value;
+  const note = notes.find(n => n.id === activeNoteId);
+  if (note) {
+    note.title = titleInput;
+    renderSidebar();
+    // autosave
+    saveActiveNoteDebounced();
+  }
+}
+
+let saveDebounce = null;
+function saveActiveNoteDebounced() {
+  clearTimeout(saveDebounce);
+  saveDebounce = setTimeout(saveActiveNote, 600);
+}
+
+async function saveActiveNote() {
+  if (!activeNoteId || !supabaseClient || isSaving) return;
+  isSaving = true;
+  const note = notes.find(n => n.id === activeNoteId);
+  const contentEl = document.getElementById('note-content');
+  if (!note || !contentEl) { isSaving = false; return; }
+
+  note.content = contentEl.value;
+  note.updatedAt = Date.now();
+
+  try {
+    await updateNoteInSupabase(activeNoteId, { title: note.title, content: note.content });
+    updateStatus('Saved');
+  } catch (e) {
+    updateStatus('Save failed');
+    console.error(e);
+  }
+  isSaving = false;
+}
+
+function renderResults() {
+  const contentEl = document.getElementById('note-content');
+  const resultsCol = document.getElementById('results-col');
+  if (!contentEl || !resultsCol) return;
+
+  const lines = contentEl.value.split('\n');
+  const results = Calculator.evaluateLines(lines);
+
+  resultsCol.innerHTML = '';
+  results.forEach(r => {
+    const line = document.createElement('div');
+    line.className = 'result-line text-[#FFD700]';
+    line.textContent = r.display || '\u00A0';
+    resultsCol.appendChild(line);
+  });
+
+  // pad
+  for (let i = 0; i < 18; i++) {
+    const pad = document.createElement('div');
+    pad.className = 'result-line';
+    pad.innerHTML = '&nbsp;';
+    resultsCol.appendChild(pad);
+  }
+}
+
+function syncScroll() {
+  const textarea = document.getElementById('note-content');
+  const results = document.getElementById('results-col');
+  if (!textarea || !results) return;
+
+  textarea.onscroll = () => { results.scrollTop = textarea.scrollTop; };
+  textarea.oninput = () => {
+    renderResults();
+    saveActiveNoteDebounced();
+  };
+}
+
+// ===================== CREATE / DELETE =====================
+async function createNewNote() {
+  if (!currentUser) return;
+  const newNote = {
+    title: 'New Note',
+    content: ''
+  };
+  try {
+    const saved = await createNoteInSupabase(newNote);
+    if (saved) {
+      notes.unshift(saved);
+      // update order
+      await saveCurrentOrder();
+      activeNoteId = saved.id;
+      renderSidebar();
+      selectNote(saved.id);
+    }
+  } catch (e) {
+    alert('Failed to create note: ' + e.message);
+  }
+}
+
+function confirmDeleteNote() {
+  const note = notes.find(n => n.id === activeNoteId);
+  if (!note) return;
+  document.getElementById('delete-note-name').textContent = `Delete "${note.title || 'Untitled'}"?`;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+
+function hideDeleteModal() {
+  document.getElementById('delete-modal').classList.remove('flex');
+  document.getElementById('delete-modal').classList.add('hidden');
+}
+
+async function deleteActiveNote() {
+  hideDeleteModal();
+  if (!activeNoteId) return;
+  const idToDelete = activeNoteId;
+
+  try {
+    await deleteNoteFromSupabase(idToDelete);
+    notes = notes.filter(n => n.id !== idToDelete);
+    
+    // update order
+    await saveCurrentOrder();
+
+    if (notes.length === 0) {
+      await createWelcomeNote();
+    } else {
+      activeNoteId = notes[0].id;
+    }
+    renderSidebar();
+    selectNote(activeNoteId);
+  } catch (e) {
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+async function createWelcomeNote() {
+  const welcome = {
+    title: 'Welcome Note',
+    content: `Welcome to Notepad Calculator!
+Type calculations and see results instantly.
+
+Basic math:
+100 + 200
+50 * 3
+
+Supports $ and commas:
+$1.50 + $2.50
+1,000 + 500
+
+Line continuation (start with + - * /):
+100 + 200
+*2
+
+Smart percentage:
+200 + 15%
+1000 - 20%
+
+Variables:
+price = 50
+tax = price * 10%
+price + tax
+
+Use 'ans':
+100 + 200
+ans * 2`
+  };
+  const saved = await createNoteInSupabase(welcome);
+  if (saved) {
+    notes = [saved];
+    activeNoteId = saved.id;
+    await saveCurrentOrder();
+  }
+}
+
+// ===================== SETTINGS =====================
+const TEXT_COLORS = [
+  { name: 'Red', value: '#FF4444' },
+  { name: 'Orange', value: '#FF8C00' },
+  { name: 'Yellow', value: '#FFD700' },
+  { name: 'Green', value: '#4CAF50' },
+  { name: 'Blue', value: '#4FC3F7' },
+  { name: 'Indigo', value: '#7B68EE' },
+  { name: 'Violet', value: '#BA68C8' },
+  { name: 'White', value: '#FFFFFF' }
+];
+
+function renderColorSwatches() {
+  const container = document.getElementById('color-swatches');
+  container.innerHTML = '';
+  TEXT_COLORS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = `color-swatch ${settings.textColor === c.value ? 'selected' : ''}`;
+    btn.style.background = c.value;
+    if (c.value === '#FFFFFF' && !settings.darkMode) btn.style.background = '#1a237e';
+    btn.title = c.name;
+    btn.onclick = () => {
+      settings.textColor = c.value;
+      applySettings();
+      renderColorSwatches();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function setTheme(dark) {
+  settings.darkMode = dark;
+  applySettings();
+  document.getElementById('btn-dark').classList.toggle('bg-[#FFD700]', dark);
+  document.getElementById('btn-dark').classList.toggle('text-black', dark);
+  document.getElementById('btn-light').classList.toggle('bg-[#FFD700]', !dark);
+  document.getElementById('btn-light').classList.toggle('text-black', !dark);
+}
+
+function setResultPosition(pos) {
+  settings.resultPosition = pos;
+  applySettings();
+}
+
+function applySettings() {
+  const root = document.documentElement;
+  const editorArea = document.getElementById('editor-area');
+  const textarea = document.getElementById('note-content');
+  const results = document.getElementById('results-col');
+  const header = document.querySelector('header');
+
+  if (settings.darkMode) {
+    root.style.setProperty('--accent', '#FFD700');
+    document.body.style.background = '#121212';
+    document.body.style.color = '#e0e0e0';
+    if (header) header.style.background = '#1e1e1e';
+  } else {
+    document.body.style.background = '#f5f5f5';
+    document.body.style.color = '#333';
+    if (header) header.style.background = '#e8e8e8';
+  }
+
+  // Position results
+  const pane = document.getElementById('editor-pane');
+  if (pane && results && textarea) {
+    if (settings.resultPosition === 'left') {
+      results.style.order = '-1';
+      results.style.borderRight = '1px solid #333';
+      results.style.borderLeft = 'none';
+      results.style.textAlign = 'right';
+    } else {
+      results.style.order = '1';
+      results.style.borderLeft = '1px solid #333';
+      results.style.borderRight = 'none';
+      results.style.textAlign = 'left';
+    }
+  }
+
+  // Text color
+  let effectiveColor = settings.textColor;
+  if (!settings.darkMode && settings.textColor === '#FFFFFF') effectiveColor = '#1a237e';
+  if (textarea) textarea.style.color = effectiveColor;
+  if (results) results.style.color = settings.darkMode ? '#FFD700' : '#DC2626';
+
+  // persist settings locally (per device)
+  localStorage.setItem('nc-settings', JSON.stringify(settings));
+  renderColorSwatches();
+}
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem('nc-settings');
+    if (saved) settings = { ...settings, ...JSON.parse(saved) };
+  } catch (e) {}
+}
+
+function toggleSettings() {
+  const dd = document.getElementById('settings-dropdown');
+  dd.classList.toggle('hidden');
+  if (!dd.classList.contains('hidden')) {
+    renderColorSwatches();
+  }
+}
+
+// Close settings when clicking outside
+document.addEventListener('click', (e) => {
+  const container = document.getElementById('settings-container');
+  const dd = document.getElementById('settings-dropdown');
+  if (!container.contains(e.target)) dd.classList.add('hidden');
+});
+
+// ===================== INITIALIZATION & AUTH LISTENER =====================
+function updateStatus(text) {
+  const el = document.getElementById('status-text');
+  if (el) el.textContent = text;
+}
+
+function updateUserInfo() {
+  const el = document.getElementById('user-info');
+  if (currentUser && el) {
+    el.textContent = currentUser.email || 'User';
+  }
+}
+
+async function loadUserData() {
+  notes = await loadNotesFromSupabase();
+  
+  let order = await loadNoteOrder();
+  
+  if (order && order.length) {
+    const map = Object.fromEntries(notes.map(n => [n.id, n]));
+    notes = order.map(id => map[id]).filter(Boolean);
+  } else {
+    notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }
+
+  if (notes.length === 0) {
+    await createWelcomeNote();
+  }
+
+  activeNoteId = notes[0]?.id || null;
+  
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+
+  renderSidebar();
+  if (activeNoteId) selectNote(activeNoteId);
+
+  // wire live editor
+  const textarea = document.getElementById('note-content');
+  if (textarea) {
+    textarea.addEventListener('input', () => renderResults());
+    syncScroll();
+  }
+
+  // initial render results
+  setTimeout(renderResults, 30);
+  updateUserInfo();
+  applySettings();
+
+  updateStatus('Connected to Supabase • Auto-save on');
+}
+
+function setupAuthListener() {
+  if (!supabaseClient) return;
+  
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+      currentUser = session.user;
+      loadUserData();
+    } else {
+      // logged out or no session
+      currentUser = null;
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }
+  });
+}
+
+async function bootstrap() {
+  initTailwind();
+  loadSettings();
+
+  const hasConfig = initSupabase();
+  
+  if (!hasConfig) {
+    // Demo mode - show warning but still allow local-only for testing UI
+    document.getElementById('auth-screen').innerHTML = `
+      <div class="max-w-sm mx-auto p-8 text-center">
+        <h2 class="text-xl mb-4">Supabase not configured</h2>
+        <p class="text-sm text-[#888] mb-6">Open the file and replace SUPABASE_URL + SUPABASE_ANON_KEY at the top of the &lt;script&gt;.</p>
+        <button onclick="location.reload()" class="px-6 py-2 bg-[#FFD700] text-black rounded-2xl font-medium">Reload after editing</button>
+      </div>`;
+    return;
+  }
+
+  setupAuthListener();
+
+  // Check current session immediately
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    await loadUserData();
+  } else {
+    // Show login screen (already visible)
+    document.getElementById('auth-screen').classList.remove('hidden');
+  }
+
+  // Default color swatches prep
+  setTimeout(() => {
+    const dd = document.getElementById('settings-dropdown');
+    if (dd && !dd.classList.contains('hidden')) renderColorSwatches();
+  }, 500);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter' && document.getElementById('app-screen').classList.contains('hidden') === false) {
+      e.preventDefault();
+      createNewNote();
+    }
+  });
+
+  console.log('%c[Notepad Calculator] Single-file app initialized. Replace Supabase keys.', 'color:#666');
+}
+
+// ===================== START =====================
+window.onload = bootstrap;
+</script>
+</body>
+</html>

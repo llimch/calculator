@@ -1,0 +1,13 @@
+# Ignore heavy / unnecessary folders
+node_modules/
+bak/
+.next/
+.DS_Store
+*.log
+
+# Keep only the deployment files
+!index.html
+!vercel.json
+!README.md
+!SINGLE_HTML_SUPABASE_PLAN.md
+!favicon*

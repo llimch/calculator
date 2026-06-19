@@ -12,6 +12,11 @@
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "grok-calculator-icon-1024.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg"
     }
   ],
   "start_url": ".",

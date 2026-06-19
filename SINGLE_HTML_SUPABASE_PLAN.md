@@ -37,20 +37,149 @@
   - Database tables with RLS.
   - Direct calls from the browser (no server/proxy code).
 - **Hosting Split (Free)**
-  - **Frontend (index.html + all UI/calculator logic)**: Hosted on **Vercel** (free tier). This is the part you asked about.
-  - **Backend (users, login, saved notes)**: Hosted on **Supabase** (free tier). This cannot be moved to Vercel.
-  - Vercel serves the static HTML. The HTML then securely talks to your Supabase project from the user's browser.
+  - **Frontend (index.html + all UI/calculator logic)**: Hosted on **Vercel** (free tier).
+  - **Backend (users, login, saved notes)**: Must use an external service. This part **cannot** be hosted purely inside Vercel if you want to keep the project as a single static HTML file.
+
+**Important Answer to your question:**
+
+**Can you avoid Supabase and use only Vercel?**
+
+**No, not easily** — if you want real user login + private stored data.
+
+Vercel is excellent for **hosting** the HTML, but Vercel itself does **not** provide:
+- User authentication (login, signup, password, sessions)
+- A secure per-user database
+
+Vercel has storage products (Postgres, KV), but using them securely for user accounts from a pure client-side HTML file requires adding serverless functions. This would break the "single file" simplicity we have now.
+
+### Realistic Options
+
+| Approach                  | Real User Login? | Private Data per User? | Stays Single HTML? | Recommendation |
+|---------------------------|------------------|------------------------|--------------------|----------------|
+| Supabase (current)        | Yes             | Yes                    | Yes                | Easiest       |
+| Clerk                     | Yes             | Yes                    | Yes                | Best alternative |
+| Firebase                  | Yes             | Yes                    | Yes                | Good          |
+| Only localStorage         | Fake only       | No (per browser)       | Yes                | Simplest, but limited |
+| Vercel KV + Functions     | Possible        | Possible               | No                 | More complex  |
+
+**My advice right now:**
+- If you want to drop Supabase, the cleanest replacement while staying single-file is **Clerk**.
+- If you are okay with "no real login across devices", we can switch to pure localStorage (much simpler).
+
+Do you want me to:
+A) Switch the project to **Clerk** (still single HTML + Vercel)?
+B) Remove external service and use **localStorage only**?
+C) Keep Supabase but make the setup instructions clearer?
 - **Recommended Deployment**
   - Use your GitHub repo (https://github.com/llimch/calculator.git) as the source.
   - Connect Vercel to that repo — Vercel will build/deploy automatically on every push.
 - **Local dev:** Just open index.html in browser (or simple http server for CORS if needed during dev).
 - **Cleanup:** All Next.js / old source moved to `bak/`.
 
-## 3. Supabase Project Setup (Do this first)
-1. Go to https://supabase.com → Sign up (GitHub/Google/email, free, no card).
-2. Create new project (name e.g. "notepad-calculator-personal", password for DB).
-3. In project Dashboard → **Authentication** → Providers → Enable **Email** (password sign-in). Disable "Confirm email" for simplicity (or keep for production).
-4. Go to **SQL Editor** and run the following to create tables + RLS (copy-paste exactly):
+## 3. Supabase Project Setup – Step by Step (Recommended for your project)
+
+### Step 1: Create Account & Project
+1. Go to https://supabase.com
+2. Click **Sign up** (you can use GitHub, Google, or email – no credit card needed)
+3. After logging in, click **New project**
+4. Fill in:
+   - **Name**: `notepad-calculator` (or anything you like)
+   - **Database Password**: Create a strong password and save it somewhere safe
+   - **Region**: Choose the closest to you (Singapore if available)
+5. Click **Create new project** and wait ~1-2 minutes
+
+### Step 2: Get Your Supabase Keys (Important)
+1. Once the project is ready, go to the left sidebar → **Settings** → **API**
+2. Copy these two values (you will need them):
+   - **Project URL** → looks like `https://abc123.supabase.co`
+   - **anon public** key → starts with `eyJhbGciOi...`
+
+### Step 3: Enable Email Login
+1. In the left sidebar, click **Authentication**
+2. Go to the **Providers** tab
+3. Make sure **Email** is enabled
+4. (Recommended for testing) Turn **OFF** "Confirm email" so you can sign up and log in immediately without email verification
+
+### Step 4: Create the Database Tables + Security
+1. In the left sidebar, click **SQL Editor**
+2. Click **New query**
+3. Copy and paste the entire code below, then click **Run**
+
+```sql
+-- 1. Notes table
+create table if not exists public.notes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null default 'New Note',
+  content text not null default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- 2. Note ordering table (for drag & drop order)
+create table if not exists public.note_order (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  note_ids uuid[] not null default '{}'
+);
+
+-- 3. Enable Row Level Security (RLS)
+alter table public.notes enable row level security;
+alter table public.note_order enable row level security;
+
+-- 4. Security policies – users can only access their own data
+create policy "Users can view own notes"
+  on public.notes for select using (auth.uid() = user_id);
+
+create policy "Users can insert own notes"
+  on public.notes for insert with check (auth.uid() = user_id);
+
+create policy "Users can update own notes"
+  on public.notes for update using (auth.uid() = user_id);
+
+create policy "Users can delete own notes"
+  on public.notes for delete using (auth.uid() = user_id);
+
+create policy "Users can view own note order"
+  on public.note_order for select using (auth.uid() = user_id);
+
+create policy "Users can manage own note order"
+  on public.note_order for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- 5. Auto-update timestamp trigger
+create or replace function public.handle_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger notes_updated_at
+  before update on public.notes
+  for each row execute function public.handle_updated_at();
+```
+
+### Step 5: Put the Keys into Your Project
+1. Open your local `index.html`
+2. Near the top of the file, replace the placeholder lines:
+   ```js
+   const SUPABASE_URL = 'https://YOUR-PROJECT-ID.supabase.co';
+   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...YOUR-ANON-KEY-HERE...';
+   ```
+3. Paste your real **Project URL** and **anon key** from Step 2
+
+### Step 6: Test & Deploy
+1. Open `index.html` directly in your browser and test signup/login + creating notes
+2. When it works locally:
+   ```powershell
+   git add index.html
+   git commit -m "Add Supabase keys"
+   git push
+   ```
+3. Vercel will automatically redeploy (check your Vercel dashboard)
+4. Visit your live Vercel URL and test again
+
+**Tip**: On the free plan, Supabase may pause your project after ~1 week of inactivity. You can prevent this with a simple GitHub Action (I can give you the code if needed).
 
 ```sql
 -- Enable extensions if needed (usually already on)
@@ -327,6 +456,47 @@ git push -u origin main
 
 **Do NOT push these:**
 - `bak/`
+- `node_modules/`
+
+---
+
+## Next Steps After Vercel Deployment (Current Situation)
+
+The deployment succeeded, but you see **"Supabase not configured"**.
+
+This is normal — the keys in `index.html` are still the placeholder values.
+
+### Do this now (follow the version control rule):
+
+1. **Create snapshot first** (mandatory):
+   ```powershell
+   # Get current time in HHMM format
+   $time = Get-Date -Format "HHmm"
+   Copy-Item index.html "VersionControl/index.html.v06.20260619.$time"
+   ```
+
+2. **Edit your local `index.html`**:
+   - Open the file
+   - Replace these two lines near the top with your real Supabase values:
+     ```js
+     const SUPABASE_URL = 'https://YOUR-PROJECT-ID.supabase.co';
+     const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
+     ```
+
+3. **Push the update**:
+   ```powershell
+   git add index.html
+   git commit -m "Configure real Supabase keys"
+   git push
+   ```
+
+4. Wait ~30-60 seconds for Vercel to redeploy.
+
+5. Refresh your live Vercel URL.
+
+6. On the Vercel congratulations page, you can click the yellow **"Reload after editing"** button.
+
+Once the keys are correct, the login screen will appear and you can create accounts / save notes.
 - `node_modules/`
 - Any old Next.js files
 

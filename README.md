@@ -2,7 +2,7 @@
 
 **Single self-contained `index.html` + Supabase for real user accounts and data.**
 
-**Current version: v14 (2026-06-20)** — see Changelog below.
+**Current version: v16 (2026-06-30)** — see Changelog below.
 
 ## Quick Start
 
@@ -27,7 +27,7 @@
 - Data stored safely in your Supabase Postgres project
 
 ## Files
-- `index.html` — the complete application (current **v14**)
+- `index.html` — the complete application (current **v16**)
 - `VersionControl/index.html.vNN.YYYYMMDD.HHMM` — historical snapshots (do not run)
 - `SINGLE_HTML_SUPABASE_PLAN.md` — full plan, schema, hosting guide, change log, and versioning procedure
 
@@ -62,10 +62,10 @@ See the plan document for complete details and GitHub Action to prevent free-tie
 
 ## Current Version
 
-**v15** (2026-06-30)
+**v16** (2026-06-30)
 
 The app version is shown in:
-- Main footer (e.g. `2026 • v15`)
+- Main footer (e.g. `2026 • v16`)
 - Login screen footer
 - Settings dropdown (bottom)
 
@@ -78,11 +78,20 @@ All changes to the live application follow the project's strict version control 
 3. `VersionControl/` is **history only** (do not open/run files from it).
 4. A new `APP_VERSION` constant + UI labels are added/updated for the release.
 
-**Latest snapshot:** `VersionControl/index.html.v15.20260630.1522`
+**Latest snapshot:** `VersionControl/index.html.v16.20260630.1540`
 
 **Policy introduced:** 2026-06-19
 
 ## Changelog
+
+### v16 (2026-06-30) — Sticky last selected note (menu persistence)
+- Fixed bug where the note dropdown (and sidebar selection) always reset to the **first** entry after logout, internet disconnect, or relogin.
+- Selection is now "sticky": the last chosen note (e.g. "Simulation") is remembered across sessions.
+- Persisted using localStorage with a per-user key (`nc-last-active-{userId}`).
+- On load (`loadUserData`), restores the previous `activeNoteId` if the note still exists in the user's list; otherwise falls back to the first note.
+- Every `selectNote()` (dropdown change, sidebar click, new note, etc.) now saves the choice.
+- Updated `APP_VERSION` to v16.
+- Snapshot: `VersionControl/index.html.v16.20260630.1540`
 
 ### v15 (2026-06-30) — iOS title keyboard + copyable results + configurable decimals
 - **Edit title (pencil ✎ button)**: Now forces alphanumeric keyboard (`inputmode="text"`) by default. Better for named notes like "DBS FD & CLI" on iOS.

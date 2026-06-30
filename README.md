@@ -62,10 +62,10 @@ See the plan document for complete details and GitHub Action to prevent free-tie
 
 ## Current Version
 
-**v14** (2026-06-20)
+**v15** (2026-06-30)
 
 The app version is shown in:
-- Main footer (e.g. `2026 • v14`)
+- Main footer (e.g. `2026 • v15`)
 - Login screen footer
 - Settings dropdown (bottom)
 
@@ -78,11 +78,21 @@ All changes to the live application follow the project's strict version control 
 3. `VersionControl/` is **history only** (do not open/run files from it).
 4. A new `APP_VERSION` constant + UI labels are added/updated for the release.
 
-**Latest snapshot:** `VersionControl/index.html.v14.20260620.0015`
+**Latest snapshot:** `VersionControl/index.html.v15.20260630.1522`
 
 **Policy introduced:** 2026-06-19
 
 ## Changelog
+
+### v15 (2026-06-30) — iOS title keyboard + copyable results + configurable decimals
+- **Edit title (pencil ✎ button)**: Now forces alphanumeric keyboard (`inputmode="text"`) by default. Better for named notes like "DBS FD & CLI" on iOS.
+- **Left-hand results column**: Enabled text selection + native copy. Single tap/click on any result value copies the clean number (no commas) to the clipboard with visual flash feedback.
+- **Decimal Places in Settings (gear ⚙)**: New control for 0–6 decimal places (default: 2). 
+  - `+` / `–` / Reset buttons.
+  - Immediately re-renders all computed values using `toFixed(N)` + comma formatting.
+  - `$` expressions still force 2 decimals for currency-like display.
+- Bumped `APP_VERSION` to v15.
+- Snapshot: `VersionControl/index.html.v15.20260630.1522`
 
 ### v14 (2026-06-20) — iOS Home Screen Icon Fix + Toolbar Polish
 - **iOS Add to Home Screen icon fixed** (was showing plain white/black square):
